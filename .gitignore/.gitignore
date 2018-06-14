@@ -1,0 +1,418 @@
+#include <iostream>
+#include <stdlib.h>
+#include <queue>
+#include<cstdio>
+using namespace std;
+typedef int datatype;
+typedef struct BinNode
+{
+    int data;
+    struct BinNode* lchild;
+    struct BinNode* rchild;
+} BinNode;
+typedef BinNode* Tree;     //bintree本身是个指向结点的指针
+
+#define SIZE 100
+typedef struct seqstack
+{
+    Tree data[SIZE];
+    int tag[SIZE];  //为后续遍历准备的
+    int top;   //top为数组的下标
+} seqstack;
+
+void insert(BinNode *&T,BinNode *S)     //将指针S所指节点插入到二叉排序树T中
+{
+    if(T == NULL)      //若插入到空树中，插入节点成为根节点
+        T = S;
+    else if(S->data < T->data)
+        insert(T->lchild,S);
+    else
+        insert(T->rchild,S);
+}
+
+void insert2(BinNode *&T)     //建立二叉排序树
+{
+    BinNode *u;
+    int x,n;
+    cout<<"请输入结点数据：";
+    cin>>x;
+    u = new BinNode;
+    u->data = x;
+    u->lchild = NULL;
+    u->rchild = NULL;
+    insert(T,u);
+    cout<<"插入成功！"<<endl;
+}
+
+void create_bst(BinNode *&T)     //建立二叉排序树
+{
+    BinNode *u;
+    T = NULL;
+    int x,n;
+    cout<<"请输入节点数：";
+    cin>>n;
+    cout<<"请输入结点数据：";
+    while(n--)
+    {
+        cin>>x;
+        u = new BinNode;
+        u->data = x;
+        u->lchild = NULL;
+        u->rchild = NULL;
+        insert(T,u);
+
+    }
+    cout<<"创建成功！"<<endl;
+}
+
+void push(seqstack *s,Tree t)
+{
+    if(s->top == SIZE)
+    {
+        printf("the stack is full\n");
+    }
+    else
+    {
+        s->top++;
+        s->data[s->top]=t;
+    }
+}
+Tree pop(seqstack *s)
+{
+    if(s->top == -1)
+    {
+        return NULL;
+    }
+    else
+    {
+        s->top--;
+        return s->data[s->top+1];
+    }
+}
+
+void p1(Tree t)
+{
+    seqstack s;
+    s.top = -1;   //因为top在这里表示了数组中的位置，所以空为-1
+    if(!t)
+    {
+        printf("the tree is empty\n");
+    }
+    else
+    {
+        while(t || s.top != -1)
+        {
+            while(t)   //只要结点不为空就应该入栈保存，与其左右结点无关
+            {
+                printf("%d ",t->data);
+                push(&s,t);
+                t= t->lchild;
+            }
+            t=pop(&s);
+            t=t->rchild;
+        }
+    }
+}
+
+void p2(Tree t)
+{
+    seqstack s;
+    s.top = -1;
+    if(!t)
+    {
+        printf("the tree is empty!\n");
+    }
+    else
+    {
+        while(t ||s.top != -1)
+        {
+            while(t)
+            {
+                push(&s,t);
+                t= t->lchild;
+            }
+            t=pop(&s);
+            printf("%d ",t->data);
+            t=t->rchild;
+        }
+    }
+}
+
+void p3(Tree t)
+{
+    seqstack s;
+    s.top = -1;
+    if(!t)
+    {
+        printf("the tree is empty!\n");
+    }
+    else
+    {
+        while(t || s.top != -1)   //栈空了的同时t也为空。
+        {
+            while(t)
+            {
+                push(&s,t);
+                s.tag[s.top] = 0;  //设置访问标记，0为第一次访问，1为第二次访问
+                t= t->lchild;
+            }
+            if(s.tag[s.top] == 0)  //第一次访问时，转向同层右结点
+            {
+                t= s.data[s.top];  //左走到底时t是为空的，必须有这步！
+                s.tag[s.top]=1;
+                t=t->rchild;
+            }
+            else
+            {
+                while (s.tag[s.top] == 1)  //找到栈中下一个第一次访问的结点，退出循环时并没有pop所以为其左子结点
+                {
+                    t = pop(&s);
+                    printf("%d ",t->data);
+                }
+                t = NULL; //必须将t置空。跳过向左走，直接向右走
+            }
+        }
+    }
+}
+
+void jh(BinNode *&T)
+{
+    // 如果是叶子节点，则递归结束
+    if (T == NULL)
+    {
+        return;
+    }
+
+    swap(T->lchild, T->rchild); // 直接使用swap交换函数比较方便，直接交换指针；
+    jh(T->lchild);
+    jh(T->rchild);
+}
+void pVisit(Tree T)//前序遍历
+{
+    if(T != NULL)
+    {
+        cout<<T->data<<" ";
+        pVisit(T->lchild);
+        pVisit(T->rchild);
+    }
+}
+void inorderVisit(Tree T)//中序
+{
+    if(T != NULL)
+    {
+        inorderVisit(T->lchild);
+        cout<<T->data<<" ";
+        inorderVisit(T->rchild);
+    }
+}
+
+void hVisit(Tree T)      //后序遍历
+{
+    if(T != NULL)
+    {
+        hVisit(T->lchild);
+        hVisit(T->rchild);
+        cout<<T->data<<" ";
+    }
+}
+
+int Delete(Tree T)   //删除节点
+{
+    int x;
+    cout<<"请输入你要删除的数";
+    cin>>x;
+    Tree f,p = T;
+    while(p && p->data !=x)
+    {
+        if(p->data > x)
+        {
+            f = p;
+            p = p->lchild;
+        }
+        else
+        {
+            f = p;
+            p = p->rchild;
+        }
+    }
+    if(p == NULL)   return 0;  //表示没找到
+    if(p->lchild == NULL)
+    {
+        if(f->lchild == p)
+            f->lchild = p->rchild;
+        else
+            f->rchild = p->rchild;
+    }
+    else     //被删结点有左子树
+    {
+        Tree q = p->lchild;
+        Tree s = q;
+        while(q->rchild != NULL)
+        {
+            s = q;
+            q = q->rchild;
+        }
+        if(s == p->lchild)
+        {
+            p->lchild = s->lchild;
+            p->data = s -> data;
+            free(s);
+        }
+        else
+        {
+            p->data = q->data;
+            s->rchild = q->lchild;
+            free(q);
+        }
+    }
+
+}
+
+int sear(Tree T)   //删除节点
+{
+    int x;
+    cout<<"请输入要查找的数据";
+    cin>>x;
+    Tree f,p = T;
+    while(p && p->data !=x)
+    {
+        if(p->data> x)
+        {
+            f = p;
+            p = p->lchild;
+        }
+        else
+        {
+            f = p;
+            p = p->rchild;
+        }
+    }
+    if(p == NULL)   cout<<"0"<<endl;
+    else  cout<<"1"<<endl;  //表示没找到
+
+
+}
+void layer_traver(Tree BT)//层次遍历
+{
+    queue<Tree> q;
+    Tree p=BT;
+    if(p!=NULL)
+    {
+        q.push(p);
+    }
+    while(!q.empty())
+    {
+        p = q.front();
+        q.pop();
+        cout<<p->data<<" ";
+        if(p->lchild!=NULL)
+            q.push(p->lchild);
+        if(p->rchild!=NULL)
+        {
+            q.push(p->rchild);
+        }
+    }
+}
+int GetTreeDepth(BinNode *&T)//求深度
+{
+    if (T == NULL)
+    {
+        return 0;
+    }
+
+    int left = GetTreeDepth(T->lchild);
+    int right = GetTreeDepth(T->rchild);
+
+    return left >= right ? left + 1 : right + 1;
+
+}
+
+int  Leaf(BinNode *&T)//叶子数
+{
+    if( T == NULL )
+        return 0;
+    if( T->lchild == NULL && T->rchild == NULL )
+        return 1;
+
+    return ( Leaf( T->lchild) + Leaf( T->rchild) );
+}
+
+int print()
+{
+    printf("\n\n\n\n\t\t\t\t\t\t※※※※※※※※※※※※※※※※\n");
+    printf("\t\t\t\t\t\t※                            ※\n");
+    printf("\t\t\t\t\t\t※     1. 插入新结点          ※\n");
+    printf("\t\t\t\t\t\t※----------------------------※\n");
+    printf("\t\t\t\t\t\t※     2. 递归前中后遍历      ※\n");
+    printf("\t\t\t\t\t\t※----------------------------※\n");
+    printf("\t\t\t\t\t\t※     3. 非递归前中后遍历    ※\n");
+    printf("\t\t\t\t\t\t※----------------------------※\n");
+    printf("\t\t\t\t\t\t※     4. 层次遍历二叉树      ※\n");
+    printf("\t\t\t\t\t\t※----------------------------※\n");
+    printf("\t\t\t\t\t\t※     5. 找关键字            ※\n");
+    printf("\t\t\t\t\t\t※----------------------------※\n");
+    printf("\t\t\t\t\t\t※     6. 交换左右子树        ※\n");
+    printf("\t\t\t\t\t\t※----------------------------※\n");
+    printf("\t\t\t\t\t\t※     7. 求二叉树深度        ※\n");
+    printf("\t\t\t\t\t\t※----------------------------※\n");
+    printf("\t\t\t\t\t\t※     8. 求叶子结点数        ※\n");
+    printf("\t\t\t\t\t\t※----------------------------※\n");
+    printf("\t\t\t\t\t\t※     9. 删除某结点          ※\n");
+    printf("\t\t\t\t\t\t※----------------------------※\n");
+    printf("\n\t\t\t\t\t请输入功能前的序号选择服务项目:");
+}
+int main()
+{
+    int n,m,l;
+    BinNode *T,*T2;
+    BinNode *k;
+    create_bst(T);
+    int jj;
+    print();
+    while(1)
+    {
+
+        cin>>jj;
+        switch(jj)
+        {
+        case 1:
+            insert2(T);
+            break;
+        case 2:
+            pVisit( T);
+            cout<<endl;
+            inorderVisit( T);
+            cout<<endl;
+            hVisit( T);
+            cout<<endl;
+            break;
+        case 3:
+            p1(T);
+            cout<<endl;
+            p2(T);
+            cout<<endl;
+            p3(T);
+            cout<<endl;
+            break;
+        case 4:
+            layer_traver(T);
+            cout<<endl;
+            break;
+        case 5:
+            sear( T);
+            break;
+        case 6:
+            jh(T);
+            break;
+        case 7:
+            cout<<GetTreeDepth(T)<<endl;
+            break;
+        case 8:
+            cout<<Leaf(T)<<endl;
+            break;
+        case 9:
+            Delete(T);
+            break;
+        }
+    }
+}
